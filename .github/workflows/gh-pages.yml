@@ -1,0 +1,73 @@
+name: Deploy Quartz site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-config:
+    runs-on: ubuntu-22.04
+    steps:
+      # Checkout obsidian vault
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for git info
+
+      # Clone Quartz into a temporary directory
+      - name: Clone Quartz
+        run: git clone https://github.com/jackyzha0/quartz.git /tmp/quartz
+
+      # Move your obsidian files into Quartz
+      - name: Move Vault to Quartz
+        run: |
+          cp -r . /tmp/quartz/content/
+          mkdir -p /tmp/quartz/static
+          rsync -av --include '*/' --include '*.png' --exclude '*' ./ /tmp/quartz/static/
+
+      # Install Node.js and dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Dependencies
+        working-directory: /tmp/quartz
+        run: npm ci
+
+      # Configure Quartz
+      - name: Configure Quartz
+        run: |
+          sed -i 's|baseUrl: "quartz.jzhao.xyz",|baseUrl: "https://baileylutcd.github.io/mau22c00-discrete-mathematics/",|' /tmp/quartz/quartz.config.ts
+          sed -i 's|pageTitle: "🪴 Quartz 4.0",|pageTitle: "CSU34021 Computer Architecture 2",|' /tmp/quartz/quartz.config.ts
+
+      # Build Quartz
+      - name: Build Quartz
+        working-directory: /tmp/quartz
+        run: npx quartz build
+
+      # Upload artifact
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: /tmp/quartz/public
+
+  deploy:
+    needs: build-config
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # Deploy to github pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
