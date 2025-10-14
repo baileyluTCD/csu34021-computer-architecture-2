@@ -5,11 +5,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
 
-    blueprint = {
-      url = "github:numtide/blueprint";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.systems.follows = "systems";
-    };
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    import-tree.url = "github:vic/import-tree";
 
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
@@ -28,10 +25,5 @@
     ];
   };
 
-  outputs =
-    inputs:
-    inputs.blueprint {
-      inherit inputs;
-      prefix = "nix/";
-    };
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./nix);
 }
