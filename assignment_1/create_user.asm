@@ -1,15 +1,23 @@
-        section .data
+; Hello World Program - asmtutor.com
+; Compile with: nasm -f elf helloworld.asm
+; Link with (64 bit systems require elf_i386 option): ld -m elf_i386 helloworld.o -o helloworld
+; Run with: ./helloworld
+
+        SECTION .data
 msg:
-        db "Hello, NASM world!", 10
-        len equ $ - msg
-        section .text
+        db 'Hello World!', 0Ah         ; assign msg variable with your message string
+
+        SECTION .text
         global _start
+
 _start:
-        mov eax, 4                     ; sys_write
-        mov ebx, 1                     ; file descriptor 1 = stdout
-        mov ecx, msg                   ; address of string
-        mov edx, len                   ; length of string
-        int 0x80                       ; kernel interrupt
-        mov eax, 1                     ; sys_exit
-        xor ebx, ebx
-        int 0x80
+
+        mov edx, 13                    ; number of bytes to write - one for each letter plus 0Ah (line feed character)
+        mov ecx, msg                   ; move the memory address of our message string into ecx
+        mov ebx, 1                     ; write to the STDOUT file
+        mov eax, 4                     ; invoke SYS_WRITE (kernel opcode 4)
+        int 80h
+
+        mov ebx, 0                     ; return 0 status on exit - 'No Errors'
+        mov eax, 1                     ; invoke SYS_EXIT (kernel opcode 1)
+        int 80h
