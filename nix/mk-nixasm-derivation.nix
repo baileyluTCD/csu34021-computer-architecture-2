@@ -21,13 +21,7 @@
               '';
 
               let
-                stringDropEnd =
-                  n: string:
-                  let
-                    chars = lib.stringToCharacters string;
-                    dropped = lib.dropEnd n chars;
-                  in
-                  lib.concatStrings dropped;
+                stringDropEnd = n: string: string |> lib.stringToCharacters |> lib.dropEnd n |> lib.concatStrings;
 
                 extension = ".asm";
                 extensionLen = lib.stringLength extension;
