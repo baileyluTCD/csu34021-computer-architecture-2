@@ -1,4 +1,9 @@
-{ flake-parts-lib, lib, ... }:
+{
+  flake-parts-lib,
+  lib,
+  config,
+  ...
+}:
 {
   options.perSystem = flake-parts-lib.mkPerSystemOption (
     { self', pkgs, ... }:
@@ -20,20 +25,8 @@
                 of the `src` directory.
               '';
 
-              let
-                stringDropEnd = n: string: string |> lib.stringToCharacters |> lib.dropEnd n |> lib.concatStrings;
-
-                extension = ".asm";
-                extensionLen = lib.stringLength extension;
-                name = stringDropEnd extensionLen (builtins.baseNameOf asmFile);
-              in
-
-              assert lib.assertMsg (lib.hasSuffix extension asmFile) ''
-                `asmFile` must end in ".asm"
-              '';
-
-              {
-                inherit name;
+              rec {
+                name = config.extractAsmFileName asmFile;
 
                 preBuild =
                   args.postUnpack or ''
