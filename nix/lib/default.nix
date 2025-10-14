@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ flake, inputs, ... }:
 let
   inherit (inputs.nixpkgs) lib;
 
@@ -11,5 +11,9 @@ eachSystem (
   in
   {
     treefmt = inputs.treefmt-nix.lib.evalModule pkgs (import ./treefmtConfig.nix);
+
+    mkNixAsmDerivation = pkgs.callPackage ./mkNixAsmDerivation.nix {
+      inherit flake;
+    };
   }
 )
