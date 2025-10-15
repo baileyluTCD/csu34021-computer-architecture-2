@@ -6,60 +6,57 @@
 }:
 {
   options.perSystem = flake-parts-lib.mkPerSystemOption (
-    { self', pkgs, ... }:
+    { pkgs, ... }:
     {
       options.mkNixAsmDerivation = lib.mkOption {
         description = "nixasm derivation builder";
-        default =
-          let
-            nixasm = self'.packages.nixasm;
-          in
-          lib.extendMkDerivation {
-            constructDrv = pkgs.stdenvNoCC.mkDerivation;
+        default = lib.extendMkDerivation {
+          constructDrv = pkgs.stdenvNoCC.mkDerivation;
 
-            extendDrvArgs =
-              _finalAttrs:
-              { asmFile, ... }@args:
-              assert lib.assertMsg (builtins.isString asmFile) ''
-                `asmFile` must be a string to search for in the root
-                of the `src` directory.
-              '';
+          extendDrvArgs =
+            _finalAttrs:
+            { asmFile, ... }@args:
+            assert lib.assertMsg (builtins.isString asmFile) ''
+              `asmFile` must be a string to search for in the root
+              of the `src` directory.
+            '';
 
-              rec {
-                name = config.extractAsmFileName asmFile;
+            rec {
+              name = config.extractAsmFileName asmFile;
 
-                preBuild =
-                  args.postUnpack or ''
-                    if [ ! -f "${asmFile}" ]; then
-                      echo "Error: '${asmFile}' not found"
-                      echo "Please make sure '${asmFile}' is a file that exists in 'src'"
-                      exit 1
-                    fi
-                  '';
+              preBuild =
+                args.postUnpack or ''
+                  if [ ! -f "${asmFile}" ]; then
+                    echo "Error: '${asmFile}' not found"
+                    echo "Please make sure '${asmFile}' is a file that exists in 'src'"
+                    exit 1
+                  fi
+                '';
 
-                buildPhase =
-                  args.buildPhase or ''
-                    runHook preBuild
+              buildPhase =
+                args.buildPhase or ''
+                  runHook preBuild
 
-                    ${lib.getExe nixasm} build ${asmFile}
+                  nasm -f elf32 "${asmFile}" -o "${name}.o"
+                  mold "${name}.o" -o "${name}"
 
-                    runHook postBuild
-                  '';
+                  runHook postBuild
+                '';
 
-                installPhase =
-                  args.installPhase or ''
-                    runHook preInstall
+              installPhase =
+                args.installPhase or ''
+                  runHook preInstall
 
-                    mkdir -p "$out/bin"
+                  mkdir -p "$out/bin"
 
-                    cp ${name} $out/bin/${name}
+                  cp ${name} $out/bin/${name}
 
-                    runHook postInstall
-                  '';
+                  runHook postInstall
+                '';
 
-                meta.mainProgram = name;
-              };
-          };
+              meta.mainProgram = name;
+            };
+        };
       };
     }
   );
