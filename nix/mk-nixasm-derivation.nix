@@ -15,14 +15,30 @@
 
           extendDrvArgs =
             _finalAttrs:
-            { asmFile, ... }@args:
+            {
+              asmFile,
+              nativeBuildInputs ? [ ],
+              ...
+            }@args:
             assert lib.assertMsg (builtins.isString asmFile) ''
               `asmFile` must be a string to search for in the root
               of the `src` directory.
             '';
 
-            rec {
+            let
               name = config.extractAsmFileName asmFile;
+            in
+
+            {
+              inherit name;
+
+              nativeBuildInputs =
+                with pkgs;
+                [
+                  nasm
+                  mold
+                ]
+                ++ nativeBuildInputs;
 
               preBuild =
                 args.postUnpack or ''
