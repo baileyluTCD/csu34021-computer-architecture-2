@@ -20,11 +20,21 @@ in
 
         throw () {
           if [ $# != 1 ]; then
-            echo "Invalid arg count provided to 'print_error'"
+            echo "Invalid arg count provided to 'throw'"
             echo "Expected one argument"
           fi
 
           printf "\033[31mError:\033[0m %s\n" "$1"
+          exit 1
+        }
+
+        throw_inspect () {
+          if [ $# != 2 ]; then
+            echo "Invalid arg count provided to 'throw_inspect'"
+            echo "Expected two arguments"
+          fi
+
+          printf "\033[31mError:\033[0m %s\nFound: '%s'\n" "$1" "$2"
           exit 1
         }
       '';
